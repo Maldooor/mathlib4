@@ -284,3 +284,6 @@ theorem ContMDiffOn.smul {f : M → 𝕜} {g : M → V} (hf : ContMDiffOn I 𝓘
 theorem ContMDiff.smul {f : M → 𝕜} {g : M → V} (hf : ContMDiff I 𝓘(𝕜) n f)
     (hg : ContMDiff I 𝓘(𝕜, V) n g) : ContMDiff I 𝓘(𝕜, V) n fun p => f p • g p := fun x =>
   (hf x).smul (hg x)
+
+theorem ContMDiff.const_smul (c : 𝕜) {g : M → V} (hg : ContMDiff I 𝓘(𝕜, V) n g) :
+    ContMDiff I 𝓘(𝕜, V) n (c • g) := (contMDiff_const).smul hg
