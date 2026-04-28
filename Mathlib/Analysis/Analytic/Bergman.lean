@@ -185,7 +185,7 @@ theorem dominatesLebesgue_subset (u v : TopologicalSpace.OpenNhdsOf x) (hsubst: 
     (h : volume.restrict (I.symm ⁻¹' ((chartAt H x)'' u)) ≪ LocalMeasureAt I μ x u) :
     volume.restrict (I.symm ⁻¹' ((chartAt H x)'' v)) ≪ LocalMeasureAt I μ x v := by
   simp [LocalMeasureAt]
-  exact Measure.restrict_mono
+  have := Measure.restrict_absolutelyContinuous_restrict hsubst 
 
 
 variable [SFinite μ] --why do we need this again? Maybe we dont?
