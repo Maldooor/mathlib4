@@ -161,32 +161,39 @@ variable {H : Type*} [TopologicalSpace H] (I : ModelWithCorners ℂ E H)
 variable {M : Type*} [TopologicalSpace M] [ChartedSpace H M] [MeasurableSpace M]
 variable (μ : Measure M)
 variable (E' : Type*) [NormedAddCommGroup E'] [NormedSpace ℂ E']
-variable (p : ℝ≥0∞) [FiniteDimensional ℂ E]
+variable (p : ℝ≥0∞) --[FiniteDimensional ℂ E]
 
-variable [FiniteDimensional ℝ E] --should be unnecessary
-
+variable [FiniteDimensional ℝ E] --should be unnecessary?
 instance : InnerProductSpace ℝ E := .complexToReal
 
 variable [MeasurableSpace E] [BorelSpace E] --Should also be unnecessary?
+--variable [MeasureSpace E]
 
 variable (x : M)
 
 --show IsOpenPosMeasure?
 --maybe this should be phrased in terms of filters instead, basically as a limit as the size of the
 --  neighbourhood decreases..
-def LocalMeasureAt (x : M) (u : Set M) : Measure E := μ.map (I ∘ (chartAt H x))
-  |>.restrict <| I.symm ⁻¹' ((chartAt H x)'' u)
+def LocalMeasureOn (x : M) (u : Set M) : Measure E := μ.map (I ∘ (chartAt H x))
+  |>.restrict <| I.symm ⁻¹' ((chartAt H x) '' u)
 
---should be open neighbourhoods
+--We need to show this I think...
+theorem independenceofcharts (x y : M) (u : Set M)
+    (h : u ⊆ (chartAt H x).source ∩ (chartAt H y).source) :
+  LocalMeasureOn I μ x u ≪ LocalMeasureOn I μ y u := by sorry
+
+--should be open neighbourhoods --actually not --need to show that this is independent of
+--how we've chosen our charts, more precisely, if we take a part of the intersection between then
+--that lies in both charts
 def DominatesLebesgue : Prop := ∀ x : M, ∃ u : TopologicalSpace.OpenNhdsOf x,
   volume.restrict (I.symm ⁻¹' ((chartAt H x)'' u)) ≪ LocalMeasureAt I μ x u
 
-theorem dominatesLebesgue_subset (u v : TopologicalSpace.OpenNhdsOf x) (hsubst: u ≤ v)
-    (h : volume.restrict (I.symm ⁻¹' ((chartAt H x)'' u)) ≪ LocalMeasureAt I μ x u) :
-    volume.restrict (I.symm ⁻¹' ((chartAt H x)'' v)) ≪ LocalMeasureAt I μ x v := by
-  simp [LocalMeasureAt]
-  have := Measure.restrict_absolutelyContinuous_restrict hsubst 
+theorem dominatesLebesgue_subset {u v : Set M} (hsubst : v ≤ u)
+    (h : volume.restrict (I.symm ⁻¹' ((chartAt H x) '' u)) ≪ LocalMeasureAt I μ x u) :
+    volume.restrict (I.symm ⁻¹' ((chartAt H x)'' v)) ≪ LocalMeasureAt I μ x v :=
+  h.restrict_of_subset <| Set.preimage_mono <| Set.image_mono <| Set.Subset.refl (LE.le v) hsubst
 
+variable [FiniteDimensional ℝ E] --should be unnecessary
 
 variable [SFinite μ] --why do we need this again? Maybe we dont?
 
@@ -236,14 +243,8 @@ theorem supltnorm (f : Bergman I μ E' p) {K : Set M} (hK : IsCompact K)
     exact (chartAt H ↑x).isOpen_image_of_subset_source (V_open x) (hVsubst x)
   have hD₂ : w ∈ D := ⟨x, by simp [hVx, w]⟩
   have hD₃ : volume.restrict D ≪ LocalMeasureAt I μ x (V x) := by
-    simp only [D, V]
-    have := (h x).choose_spec
-    set v₁ := (h x).choose
-
-    have : volume.restrict D ≤ volume.restrict
-      (I.symm ⁻¹' ((chartAt H (x : M)) '' (h x).choose)) := by grind [Measure.restrict_mono]
-    have := this.absolutelyContinuous
-    have : LocalMeasureAt I μ x (h x).choose ≪ LocalMeasureAt I μ x (V x) := by sorry
+    have : V x ≤ (h x).choose := by simp [V]
+    exact dominatesLebesgue_subset I μ x this (h x).choose_spec
 
   use 1
   intro z ⟨zin, hz⟩
